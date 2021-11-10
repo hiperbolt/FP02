@@ -21,10 +21,7 @@ class posicao:
         self.y = y
 
     def __repr__(self) -> str:
-        return (self.x, self.y)
-
-    def __str__(self):
-        return f"({self.x}, {self.y})"
+        return str((self.x, self.y))
 
     def __eq__(self, other) : 
         return self.__dict__ == other.__dict__
@@ -113,14 +110,14 @@ def posicao_para_str(p: posicao) -> str:
 
 def obter_posicoes_adjacentes(p: posicao) -> tuple:
     '''
-        devolve um tuplo com as posic~oes adjacentes a posic~ao
-        p, comecando pela posic~ao acima de p e seguindo no sentido horario.
+        devolve um tuplo com as posiç~oes adjacentes à posição
+        p, começando pela posição acima de p e seguindo no sentido horário.
     '''
     ### POR IMPLEMENTAR!!!
 
 def ordenar_posicoes(t: tuple) -> tuple:
     '''
-        devolve um tuplo contendo as mesmas posic~oes do tuplo fornecido
+        devolve um tuplo contendo as mesmas posições do tuplo fornecido
         como argumento, ordenadas de acordo com a ordem de leitura do prado.
     '''
     #### POR IMPLEMENTAR!!!
@@ -128,14 +125,194 @@ def ordenar_posicoes(t: tuple) -> tuple:
 ###
 #   TAD animal
 #
-#   O TAD animal e usado para representar os animais do simulador de ecossistemas que
+#   O TAD animal é usado para representar os animais do simulador de ecossistemas que
 #    habitam o prado, existindo de dois tipos: predadores e presas. Os predadores s~ao caracterizados
-#    pela especie, idade, frequ^encia de reproduc~ao, fome e frequ^encia de alimentac~ao.
-#    As presas s~ao apenas caracterizadas pela especie, idade e frequ^encia de reproduc~ao.
+#    pela espécie, idade, frequ^encia de reprodução, fome e frequ^encia de alimentação.
+#    As presas s~ao apenas caracterizadas pela espécie, idade e frequ^encia de reprodução.
 #
 #   Representação interna: posicao = (x,y) -> Lista de dois ints
 ###
 
 class animal:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, tipo, especie=None, idade=None, freq_reprod=None, fome=None, freq_alim=None) -> None:
+        self.tipo = tipo
+        self.especie = especie
+        self.idade = idade
+        self.freq_reprod = freq_reprod
+        self.fome = fome
+        self.freq_alim = freq_alim
+   
+    def __repr__(self) -> str:
+        return str(
+            {
+            "especie" : self.especie,
+            "idade": self.idade,
+            "freq_reprod" : self.freq_reprod,
+            "fome" : self.fome,
+            "freq_alim" : self.freq_alim
+            }
+        )
+    
+    def __eq__(self, other) : 
+        return self.__dict__ == other.__dict__
+
+    
+
+###
+#   Construtor
+###
+def cria_animal(s: str, r:int, a:int) -> animal:
+    '''
+        cria_animal(s, r, a) recebe uma string não vazia s
+        s = espécie
+        r = freq reprod
+        a = freq alim
+
+        TODO
+    '''
+    if isinstance(s, str) and s:
+        if isinstance(r, int) and r > 0:
+            if isinstance(a, int) and a >= 0:
+                if a > 0:
+                    return animal("predador", especie=s, freq_reprod=r, freq_alim=a)
+                return animal("presa", especie=s, freq_reprod=r, freq_alim=0)
+
+    raise ValueError("cria_animal: argumentos invalidos")
+
+def cria_copia_animal(a: animal) -> animal:
+    '''
+        TODO : Descrição
+        Garantimos que estamos a criar deep copy do objeto
+    '''
+    res = animal(a.tipo)
+    res.tipo = a.tipo
+    res.especie = a.especie
+    res.idade = a.idade
+    res.freq_reprod = a.freq_reprod
+    res.fome = a.fome
+    res.freq_alim = a.freq_alim
+    return(res)
+    
+
+###
+#   Seletores
+###
+def obter_especie(a: animal) -> str:
+    '''
+        TODO : descrição
+    '''
+    return str(a.especie)
+
+def obter_freq_reprod(a: animal) -> int:
+    '''
+        obter_freq_reprod(a) devolve a freq_reprod do animal a.
+    '''
+    return int(a.freq_reprod)
+
+def obter_freq_aliment(a: animal) -> int:
+    '''
+        obter_freq_aliment(a) devolve a freq_aliment do animal a.
+    '''
+    return int(a.freq_aliment)
+
+def obter_idade(a: animal) -> int:
+    '''
+        obter_idade(a) devolve a idade do animal a.
+    '''
+    return int(a.idade)
+ 
+def obter_fome(a: animal) -> int:
+    '''
+        obter_fome(a) devolve a fome do animal a.
+    '''
+    return int(a.fome)
+
+    
+###
+#   Modificadores
+###
+def aumenta_idade(a: animal) -> animal:
+    '''
+        TODO
+    '''
+    a.idade += 1
+    return a
+
+def reset_idade(a: animal) -> animal:
+    '''
+        TODO
+    '''
+    a.idade = 0
+    return a
+
+def aumenta_fome(a: animal) -> animal:
+    '''
+        TODO
+    '''
+    a.fome += 1
+    return a
+
+def reset_fome(a: animal) -> animal:
+    '''
+        TODO
+    '''
+    a.fome = 0
+    return a
+
+
+###
+#   Reconhecedor
+###
+def eh_animal(arg) -> bool:
+    '''
+        TODO : FIX ME!!!!
+    '''
+    pass
+
+def eh_predador(arg) -> bool:
+    if eh_animal(arg):
+        if arg.tipo == "predador":
+            return True
+    
+    return False
+
+def eh_presa(arg) -> bool:
+    if eh_animal(arg):
+        if arg.tipo == "presa":
+            return True
+
+    return False
+
+
+###
+#   Teste
+###
+def animais_iguais(a1: animal, a2: animal) -> bool:
+    '''
+        TODO : DESCRIÇÃO
+    ''' 
+    if a1 == a2:
+        return True
+    return False
+
+
+###
+#   Transformadores
+###
+def animal_para_char(a: animal) -> str:
+    '''
+        TODO : descrição
+    '''
+    res = str(a.especie)[0]
+
+    if a.tipo == "predador":
+        return res.upper()
+    else:
+        return res.lower()
+    
+def animal_para_str(a: animal) -> str:
+    '''
+        TODO : DESCRIÇÃO
+    '''
+    return f"{a.especie} [{a.freq_reprod}/20;{a.freq_alim}/10]"
+    
