@@ -603,7 +603,12 @@ def prado_para_str(m: prado) -> str:
 ###
 #    Funções Alto Nível
 ###
-    
+
+def obter_valor_numerico(m: prado, p: posicao) -> int:
+    '''
+        TODO
+    '''
+    return (m.x+3) * p.y + p.x
 
 
 
@@ -627,3 +632,5 @@ an = an2+an1
 p = cria_prado(cria_posicao(11,4), obs, an, anpos)
 print(obter_tamanho_x(p), obter_tamanho_y(p))
 print(prado_para_str(p))
+
+print(obter_valor_numerico(p, cria_posicao(9,3)))
