@@ -2,7 +2,6 @@
 #    Projeto 2 de Fundamentos da Programação
 #    Tomás Simões ist1102416
 ###
-
 from functools import reduce
 
 
@@ -134,7 +133,7 @@ def ordenar_posicoes(t: tuple) -> tuple:
 ###
 
 class animal:
-    def __init__(self, tipo, especie=None, idade=None, freq_reprod=None, fome=None, freq_alim=None) -> None:
+    def __init__(self, tipo, especie, freq_reprod, freq_alim, idade=0, fome=0) -> None:
         self.tipo = tipo
         self.especie = especie
         self.idade = idade
@@ -145,6 +144,7 @@ class animal:
     def __repr__(self) -> str:
         return str(
             {
+            "tipo" : self.tipo,
             "especie" : self.especie,
             "idade": self.idade,
             "freq_reprod" : self.freq_reprod,
@@ -185,7 +185,6 @@ def cria_copia_animal(a: animal) -> animal:
         Garantimos que estamos a criar deep copy do objeto
     '''
     res = animal(a.tipo)
-    res.tipo = a.tipo
     res.especie = a.especie
     res.idade = a.idade
     res.freq_reprod = a.freq_reprod
@@ -314,5 +313,317 @@ def animal_para_str(a: animal) -> str:
     '''
         TODO : DESCRIÇÃO
     '''
-    return f"{a.especie} [{a.freq_reprod}/20;{a.freq_alim}/10]"
+    return f"{a.especie} [{a.idade}/{a.freq_reprod};{a.fome}/{a.freq_alim}]"
     
+###
+#   Transformadores
+###
+def eh_animal_fertil(a: animal) -> bool:
+    '''
+        TODO : Descrição
+    '''
+    if a.idade >= a.freq_reprod:
+        return True
+    return False
+
+def eh_animal_faminto(a: animal) -> bool:
+    '''
+        TODO
+    '''
+    if a.fome >= a.freq_alim:
+        return True
+    return False
+
+def reproduz_animal(a: animal) -> animal:
+    '''
+        TODO
+    '''
+    a.idade = 0
+    return animal(a.tipo, a.especie)
+
+
+###
+#   TAD posicao
+#
+#   O TAD posicao é usado para representar uma posição (x; y) de um prado arbitrariamente
+#   grande, sendo x e y dois valores inteiros não negativos.
+#
+#   Representação interna: posicao = (x,y) -> Lista de dois ints
+###
+
+class prado:
+    '''
+        TODO
+    '''
+    def __init__(self, cantInfDirPos, obs, animais, posAnimais) -> None:
+        '''
+         x,y = n colunas, n linhas do prado. (x,y) representa a pos do canto
+               inferior direito do prado
+
+        e.g:
+            P = (11,4)
+            +----------+
+            |..........|
+            |..........|
+            |.........P|
+            +----------+
+
+            A representação interna do prado ignora a moldura.
+
+        '''
+        # Conservamos o input original no caso de ser útil
+        self.input_cantInfDirPos = cantInfDirPos
+        self.input_obs = obs
+        self.input_animais = animais
+        self.input_posAnimais = posAnimais
+
+        # Representação interna
+        # A rep. int. ignora a moldura pelo que tem valores x,y ligeiramente diferentes
+        # Isto é tido em conta sempre que o TAD é acedido exteriormente.
+        self.x = cantInfDirPos.x - 2
+        self.y = cantInfDirPos.y - 2
+        self.obs = list(map(lambda x: (x.x-1,x.y-1), obs))
+        
+        posAnimaisTransf = list(map(lambda x: (x.x-1,x.y-1), posAnimais))
+        self.animais = dict(zip(posAnimaisTransf, animais))
+
+    def generate_repr_interna(self):
+        self.repr = []
+
+        for i in range(self.y+1):
+            linha = []
+            for j in range(self.x+1):
+                linha.append(".")
+            self.repr.append(linha)
+
+        for o in self.obs:
+                self.repr[o[1]][o[0]] = "@"
+
+        for key in self.animais:
+            self.repr[key[1]][key[0]] = animal_para_char(self.animais[key])
+
+    def __repr__(self) -> str:
+        return str(self.repr)
+    
+    def __eq__(self, other): 
+        if (self.x, self.y, self.obs, self.animais) == (other.x, other.y, other.obs, other.animais):
+            return True
+        return False
+
+
+
+###
+#   Construtor
+###
+def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
+    '''
+        d: lower right corner pos
+        r: tuplo de posiçoes dos rochedos
+        a: tuplo de animais
+        p: tuplo de posiçoes desses animais
+    '''
+    if isinstance(d, posicao) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
+        if all(isinstance(i, animal) for i in a) and all(isinstance(i, posicao) for i in p):
+                if len(p) == len(a):
+                    if len(r) == 0 or all(isinstance(i, posicao) for i in r):
+                        # TODO: Garantir que esta arg check esta funcional
+                        pRes = prado(d, r, a, p)
+                        return pRes
+
+
+    return ValueError('cria_prado: argumentos invalidos')
+
+def cria_copia_prado(m: prado) -> prado:
+    '''
+        TODO
+    '''
+    return cria_prado(m.input_cantInfDirPos, m.input_obs, m.input_animais, m.input_posAnimais)
+
+
+###
+#   Seletores
+###
+def obter_tamanho_x(m: prado) -> int:
+    '''
+        TODO
+    '''
+    return m.input_cantInfDirPos.x + 1
+
+def obter_tamanho_y(m: prado) -> int:
+    '''
+        TODO
+    '''
+    return m.input_cantInfDirPos.y + 1
+
+def obter_numero_predadores(m: prado) -> int:
+    '''
+        TODO
+    '''
+    return int(reduce(lambda c,obj: c+1 if (obj.tipo == "predador") else c, m.input_animais, 0))
+
+def obter_numero_presas(m: prado) -> int:
+    '''
+        TODO
+    '''
+    return int(reduce(lambda x,y: x+1 if (y.tipo == 'presa') else x, m.input_animais, 0))
+
+def obter_posicao_animais(m: prado) -> tuple:
+    '''
+        TODO
+    '''
+    listaPosAnimais = list(m.input_posAnimais)
+    ## FIXME: Isto provavelmente não funciona para todos os casos ... 
+    for i in range(len(listaPosAnimais)):
+        for j in range(len(listaPosAnimais)-1):
+            if listaPosAnimais[j].x > listaPosAnimais[j+1].x:
+                listaPosAnimais[j], listaPosAnimais[j+1] = listaPosAnimais[j+1], listaPosAnimais[j]
+
+    for i in range(len(listaPosAnimais)):
+        for j in range(len(listaPosAnimais)-1):
+            if listaPosAnimais[j].y > listaPosAnimais[j+1].y:
+                listaPosAnimais[j], listaPosAnimais[j+1] = listaPosAnimais[j+1], listaPosAnimais[j]
+
+    return tuple(listaPosAnimais) 
+
+def obter_animal(m: prado, p: posicao) -> animal:
+    '''
+        TODO
+    '''
+    return m.animais[(p.x-1, p.y-1)]
+
+
+###
+#    Modificadores
+###
+
+def eliminar_animal(m: prado, p: posicao) -> prado:
+    '''
+        TODO
+    '''
+    del m.animais[(p.x-1, p.y-1)]
+    return m
+
+def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
+    '''
+        TODO
+    '''
+    m.animais[(p2.x-1, p2.y-1)] = m.animais[(p.x-1, p.y-1)]
+    del m.animais[(p1.x-1, p1.y-1)]
+    return m
+
+def inserir_animal(m: prado, a: animal, p: posicao) -> prado:
+    '''
+        TODO
+    '''
+    m.animais[(p.x-1, p.y-1)] = a
+    return m
+
+
+###
+#    Reconhecedores
+###
+
+def eh_prado(arg) -> bool:
+    '''
+        TODO
+    '''
+    if isinstance(arg, prado):
+        return True
+
+    return False
+
+def eh_posicao_animal(m: prado, p: posicao) -> bool:
+    '''
+        TODO
+    '''
+    if (p.x-1, p.y-1) in m.animais:
+        return True
+    
+    return False
+
+def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
+    '''
+        TODO
+    '''
+    if (p.x-1, p.y-1) in m.obs:
+        return True
+
+    return False
+
+def eh_posicao_livre(m: prado, p: posicao) -> bool:
+    '''
+        TODO
+    '''
+    if (p.x-1, p.y-1) not in m.animais and (p.x-1, p.y-1) not in m.obs:
+        return True
+
+    return False
+
+###
+#    Teste
+###
+
+def prados_iguais(p1: prado, p2: prado) -> bool:
+    '''
+        TODO
+    '''
+    return p1 == p2
+
+###
+#    Transformador
+###
+
+def prado_para_str(m: prado) -> str:
+    '''
+        TODO
+    '''
+    m.generate_repr_interna()
+
+    res = ""
+
+    res += "+"
+    for i in range(m.x+1):
+        res += "-"
+    res += "+\n"
+
+    for l in m.repr:
+        res += "|"
+        res += ''.join(l)
+        res += "|"
+        res += "\n"
+    
+    res += "+"
+    for i in range(m.x+1):
+        res += "-"
+    res += "+\n"
+
+    return res
+
+
+###
+#    Funções Alto Nível
+###
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+obs = (cria_posicao(4,2), cria_posicao(10,1), cria_posicao(5,2))
+anpos = tuple(cria_posicao(p[0], p[1]) for p in ((5,1), (7,2), (10,1), (6,1)))
+an2 = tuple(cria_animal('rabbit', 5, 0) for i in range(3))
+an1 = (cria_animal('lynx', 20, 15), ) 
+an = an2+an1
+p = cria_prado(cria_posicao(11,4), obs, an, anpos)
+print(obter_tamanho_x(p), obter_tamanho_y(p))
+print(prado_para_str(p))
