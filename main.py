@@ -22,6 +22,9 @@ class posicao:
     def __repr__(self) -> str:
         return str((self.x, self.y))
 
+    def __hash__(self):
+        return hash((self.x, self.y))
+
     def __eq__(self, other) : 
         return self.__dict__ == other.__dict__
 
@@ -114,10 +117,12 @@ def obter_posicoes_adjacentes(p: posicao) -> tuple:
         p, começando pela posição acima de p e seguindo no sentido horário.
     '''
     res = []
-    if p.y-1 > 0:
-        res.append(cria_posicao(p.x, p.y-1), cria_posicao(p.x+1, p.y), cria_posicao(p.x, p.y-1), )
-    if p.x-1 >0:
-        res.append(cria_posicao(p.x-1, p.y))
+    x = obter_pos_x(p)
+    y = obter_pos_y(p)
+    if y-1 > 0:
+        res.extend([cria_posicao(x, y-1), cria_posicao(x+1, y), cria_posicao(x, y-1)])
+    if x-1 >0:
+        res.append(cria_posicao(x-1, y))
     
     return tuple(res)
 
@@ -126,7 +131,7 @@ def ordenar_posicoes(t: tuple) -> tuple:
         devolve um tuplo contendo as mesmas posições do tuplo fornecido
         como argumento, ordenadas de acordo com a ordem de leitura do prado.
     '''
-    return tuple(sorted(list(t), key=lambda x: (x.y, x.x)))
+    return tuple(sorted(list(t), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
 
 
 ###
@@ -331,7 +336,7 @@ def eh_animal_fertil(a: animal) -> bool:
     '''
         TODO : Descrição
     '''
-    if a.idade >= a.freq_reprod:
+    if obter_idade(a) >= obter_freq_reprod(a):
         return True
 
     return False
@@ -340,7 +345,7 @@ def eh_animal_faminto(a: animal) -> bool:
     '''
         TODO
     '''
-    if a.fome >= a.freq_alim:
+    if obter_fome(a) >= obter_freq_aliment(a):
         return True
 
     return False
@@ -349,8 +354,9 @@ def reproduz_animal(a: animal) -> animal:
     '''
         TODO
     '''
-    a.idade = 0
-    return animal(a.tipo, a.especie)
+    reset_idade(a)
+    return reset_fome(reset_idade(cria_copia_animal(a)))
+
 
 
 ###
@@ -391,33 +397,31 @@ class prado:
         # Representação interna
         # A rep. int. ignora a moldura pelo que tem valores x,y ligeiramente diferentes
         # Isto é tido em conta sempre que o TAD é acedido exteriormente.
-        self.x = cantInfDirPos.x - 2
-        self.y = cantInfDirPos.y - 2
-        self.obs = list(map(lambda x: (x.x-1,x.y-1), obs))
-        
-        posAnimaisTransf = list(map(lambda x: (x.x-1,x.y-1), posAnimais))
-        self.animais = dict(zip(posAnimaisTransf, animais))
+        self.colunas = obter_pos_x(cantInfDirPos) - 1
+        self.linhas = obter_pos_y(cantInfDirPos) - 1
+        self.obs = list(obs)
+        self.animais = dict(zip(posAnimais, animais))
 
     def generate_repr_interna(self):
         self.repr = []
 
-        for i in range(self.y+1):
+        for i in range(self.linhas):
             linha = []
-            for j in range(self.x+1):
+            for j in range(self.colunas):
                 linha.append(".")
             self.repr.append(linha)
 
         for o in self.obs:
-                self.repr[o[1]][o[0]] = "@"
+                self.repr[obter_pos_y(o)-1][obter_pos_x(o)-1] = "@"
 
         for key in self.animais:
-            self.repr[key[1]][key[0]] = animal_para_char(self.animais[key])
+            self.repr[obter_pos_y(key)-1][obter_pos_x(key)-1] = animal_para_char(self.animais[key])
 
     def __repr__(self) -> str:
         return str(self.repr)
     
     def __eq__(self, other): 
-        if (self.x, self.y, self.obs, self.animais) == (other.x, other.y, other.obs, other.animais):
+        if (self.colunas, self.linhas, self.obs, self.animais) == (other.colunas, other.linhas, other.obs, other.animais):
             return True
         return False
 
@@ -458,37 +462,37 @@ def obter_tamanho_x(m: prado) -> int:
     '''
         TODO
     '''
-    return m.input_cantInfDirPos.x + 1
+    return obter_pos_x(m.input_cantInfDirPos) + 1
 
 def obter_tamanho_y(m: prado) -> int:
     '''
         TODO
     '''
-    return m.input_cantInfDirPos.y + 1
+    return obter_pos_y(m.input_cantInfDirPos) + 1
 
 def obter_numero_predadores(m: prado) -> int:
     '''
         TODO
     '''
-    return int(reduce(lambda c,obj: c+1 if (obj.tipo == "predador") else c, m.input_animais, 0))
+    return int(reduce(lambda x,y: x+1 if (eh_predador(y)) else x, m.input_animais, 0))
 
 def obter_numero_presas(m: prado) -> int:
     '''
         TODO
     '''
-    return int(reduce(lambda x,y: x+1 if (y.tipo == 'presa') else x, m.input_animais, 0))
+    return int(reduce(lambda x,y: x+1 if (eh_presa(y)) else x, m.input_animais, 0))
 
 def obter_posicao_animais(m: prado) -> tuple:
     '''
         TODO
     '''
-    return tuple(sorted(list(m.input_posAnimais), key=lambda x: (x.y, x.x)))
+    return tuple(sorted(list(m.input_posAnimais), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
 
 def obter_animal(m: prado, p: posicao) -> animal:
     '''
         TODO
     '''
-    return m.animais[(p.x-1, p.y-1)]
+    return m.animais[p]
 
 
 ###
@@ -499,22 +503,23 @@ def eliminar_animal(m: prado, p: posicao) -> prado:
     '''
         TODO
     '''
-    del m.animais[(p.x-1, p.y-1)]
+    del m.animais[p]
     return m
 
 def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
     '''
         TODO
     '''
-    m.animais[(p2.x-1, p2.y-1)] = m.animais[(p.x-1, p.y-1)]
-    del m.animais[(p1.x-1, p1.y-1)]
+    if p1 != p2:
+        m.animais[p2] = m.animais[p1]
+        del m.animais[p1]
     return m
 
 def inserir_animal(m: prado, a: animal, p: posicao) -> prado:
     '''
         TODO
     '''
-    m.animais[(p.x-1, p.y-1)] = a
+    m.animais[p] = a
     return m
 
 
@@ -535,7 +540,7 @@ def eh_posicao_animal(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if (p.x-1, p.y-1) in m.animais:
+    if p in m.animais:
         return True
     
     return False
@@ -544,7 +549,7 @@ def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if (p.x-1, p.y-1) in m.obs:
+    if p in m.obs or obter_pos_x(p) == 0 or obter_pos_y == 0:
         return True
 
     return False
@@ -553,8 +558,9 @@ def eh_posicao_livre(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if (p.x-1, p.y-1) not in m.animais and (p.x-1, p.y-1) not in m.obs:
-        return True
+    if p not in m.animais and p not in m.obs:
+        if obter_pos_x(p) != 0 and obter_pos_y != 0:
+            return True
 
     return False
 
@@ -583,7 +589,7 @@ def prado_para_str(m: prado) -> str:
     res = ""
 
     res += "+"
-    for i in range(m.x+1):
+    for i in range(m.colunas):
         res += "-"
     res += "+\n"
 
@@ -594,9 +600,9 @@ def prado_para_str(m: prado) -> str:
         res += "\n"
     
     res += "+"
-    for i in range(m.x+1):
+    for i in range(m.colunas):
         res += "-"
-    res += "+\n"
+    res += "+"
 
     return res
 
@@ -609,7 +615,7 @@ def obter_valor_numerico(m: prado, p: posicao) -> int:
     '''
         TODO
     '''
-    return (m.x+3) * p.y + p.x
+    return (obter_tamanho_x(m)) * obter_pos_y(p) + obter_pos_x(p)
 
 def obter_movimento(m: prado, p: posicao) -> posicao:
     '''
@@ -624,6 +630,8 @@ def obter_movimento(m: prado, p: posicao) -> posicao:
 
     N = obter_valor_numerico(m, p)
 
+    if n == 0:
+        return p
     return posDict[N%n]
 
 
@@ -635,13 +643,29 @@ def geracao(m: prado) -> prado:
     '''
         TODO
     '''
-    pass    
+    for i in range(obter_tamanho_y(m)):     # Por linha
+        for j in range(obter_tamanho_x(m)):    # Por coluna
+            pos = cria_posicao(j+1,i+1)
+            if eh_posicao_animal(m, pos):
+                if eh_presa(obter_animal(m, pos)):
+                    mover_animal(m, pos, obter_movimento(m, pos))
+                elif eh_predador(obter_animal(m, pos)):
+                    n = 0
+                    presasDict = {}
+                    for pos in obter_posicoes_adjacentes(p):
+                        if eh_posicao_animal(m, pos):
+                            if eh_presa(obter_animal(m, pos)):
+                                presasDict[n] = pos
+                                n += 1
+                    N = obter_valor_numerico(m, p)
+                    if n != 0:
+                        # comer animal
+                        pass
+                    else:
+                        mover_animal(m, pos, obter_movimento(m, pos))
 
-
-
-
-
-
+    return m
+        
 
 
 
@@ -661,3 +685,10 @@ print(obter_valor_numerico(p, cria_posicao(9,3)))
 print(ordenar_posicoes(anpos + obs))
 
 print(posicao_para_str(obter_movimento(p, cria_posicao(5,1))))
+
+print(prado_para_str(geracao(p)))
+print(prado_para_str(geracao(p)))
+print(prado_para_str(geracao(p)))
+print(prado_para_str(geracao(p)))
+print(prado_para_str(geracao(p)))
+print(prado_para_str(geracao(p)))
