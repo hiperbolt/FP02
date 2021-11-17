@@ -120,7 +120,8 @@ def obter_posicoes_adjacentes(p: posicao) -> tuple:
     x = obter_pos_x(p)
     y = obter_pos_y(p)
     if y-1 > 0:
-        res.extend([cria_posicao(x, y-1), cria_posicao(x+1, y), cria_posicao(x, y-1)])
+        res.append(cria_posicao(x, y-1))
+    res.extend([cria_posicao(x+1, y), cria_posicao(x, y+1)])
     if x-1 >0:
         res.append(cria_posicao(x-1, y))
     
@@ -486,7 +487,7 @@ def obter_posicao_animais(m: prado) -> tuple:
     '''
         TODO
     '''
-    return tuple(sorted(list(m.input_posAnimais), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
+    return tuple(sorted(list(m.animais.keys()), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
 
 def obter_animal(m: prado, p: posicao) -> animal:
     '''
@@ -560,7 +561,8 @@ def eh_posicao_livre(m: prado, p: posicao) -> bool:
     '''
     if p not in m.animais and p not in m.obs:
         if obter_pos_x(p) != 0 and obter_pos_y != 0:
-            return True
+            if obter_pos_x(p) < obter_tamanho_x(m) - 1 and obter_pos_y(p) < obter_tamanho_y(m) - 1:
+                return True
 
     return False
 
@@ -643,26 +645,51 @@ def geracao(m: prado) -> prado:
     '''
         TODO
     '''
-    for i in range(obter_tamanho_y(m)):     # Por linha
-        for j in range(obter_tamanho_x(m)):    # Por coluna
-            pos = cria_posicao(j+1,i+1)
-            if eh_posicao_animal(m, pos):
-                if eh_presa(obter_animal(m, pos)):
+    listaPosicoesAnimais = list(obter_posicao_animais(m))
+
+    for pos in listaPosicoesAnimais:
+        a = obter_animal(m, pos)
+        ### Incrementar
+        aumenta_idade(a)
+        
+
+        ### Movimentação
+        if eh_presa(a):
+            if obter_movimento(m, pos) != pos:
+                mover_animal(m, pos, obter_movimento(m, pos))
+                if eh_animal_fertil(a):
+                    reset_idade(a)
+                    inserir_animal(m, reproduz_animal(a), pos)
+
+
+        elif eh_predador(a):
+            aumenta_fome(a)
+            n = 0
+            presasDict = {}
+            for possivelPresa in obter_posicoes_adjacentes(pos):
+                if eh_posicao_animal(m, possivelPresa):
+                    if eh_presa(obter_animal(m, possivelPresa)):
+                        presasDict[n] = possivelPresa
+                        n += 1
+
+            N = obter_valor_numerico(m, pos)
+            novaPos = presasDict[N%n]
+
+            if n != 0:  #Se existem "posições presa"
+                reset_fome(a)
+                eliminar_animal(m, novaPos)
+                mover_animal(m, pos, novaPos)
+                listaPosicoesAnimais.remove(novaPos)
+            else:
+                if obter_movimento(m, pos) != pos:
                     mover_animal(m, pos, obter_movimento(m, pos))
-                elif eh_predador(obter_animal(m, pos)):
-                    n = 0
-                    presasDict = {}
-                    for pos in obter_posicoes_adjacentes(p):
-                        if eh_posicao_animal(m, pos):
-                            if eh_presa(obter_animal(m, pos)):
-                                presasDict[n] = pos
-                                n += 1
-                    N = obter_valor_numerico(m, p)
-                    if n != 0:
-                        # comer animal
-                        pass
-                    else:
-                        mover_animal(m, pos, obter_movimento(m, pos))
+            
+            if eh_animal_faminto(a):
+                eliminar_animal(m, novaPos)
+        
+
+        
+
 
     return m
         
@@ -672,23 +699,12 @@ def geracao(m: prado) -> prado:
 
 
 obs = (cria_posicao(4,2), cria_posicao(5,2))
-anpos = tuple(cria_posicao(p[0], p[1]) for p in ((5,1), (7,2), (10,1), (6,1)))
+anpos = tuple(cria_posicao(p[0], p[1]) for p in ((7,1), (7,2), (10,1), (6,1)))
 an2 = tuple(cria_animal('rabbit', 5, 0) for i in range(3))
 an1 = (cria_animal('lynx', 20, 15), ) 
 an = an2+an1
 p = cria_prado(cria_posicao(11,4), obs, an, anpos)
-print(obter_tamanho_x(p), obter_tamanho_y(p))
+
 print(prado_para_str(p))
 
-print(obter_valor_numerico(p, cria_posicao(9,3)))
-
-print(ordenar_posicoes(anpos + obs))
-
-print(posicao_para_str(obter_movimento(p, cria_posicao(5,1))))
-
-print(prado_para_str(geracao(p)))
-print(prado_para_str(geracao(p)))
-print(prado_para_str(geracao(p)))
-print(prado_para_str(geracao(p)))
-print(prado_para_str(geracao(p)))
 print(prado_para_str(geracao(p)))
