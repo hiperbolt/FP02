@@ -220,7 +220,7 @@ def obter_freq_aliment(a: animal) -> int:
     '''
         obter_freq_aliment(a) devolve a freq_aliment do animal a.
     '''
-    return int(a.freq_aliment)
+    return int(a.freq_alim)
 
 def obter_idade(a: animal) -> int:
     '''
@@ -475,13 +475,13 @@ def obter_numero_predadores(m: prado) -> int:
     '''
         TODO
     '''
-    return int(reduce(lambda x,y: x+1 if (eh_predador(y)) else x, m.input_animais, 0))
+    return int(reduce(lambda x,y: x+1 if (eh_predador(y)) else x, list(m.animais.values()), 0))
 
 def obter_numero_presas(m: prado) -> int:
     '''
         TODO
     '''
-    return int(reduce(lambda x,y: x+1 if (eh_presa(y)) else x, m.input_animais, 0))
+    return int(reduce(lambda x,y: x+1 if (eh_presa(y)) else x, list(m.animais.values()), 0))
 
 def obter_posicao_animais(m: prado) -> tuple:
     '''
@@ -673,38 +673,62 @@ def geracao(m: prado) -> prado:
                         n += 1
 
             N = obter_valor_numerico(m, pos)
-            novaPos = presasDict[N%n]
 
             if n != 0:  #Se existem "posições presa"
+                novaPos = presasDict[N%n]
                 reset_fome(a)
                 eliminar_animal(m, novaPos)
                 mover_animal(m, pos, novaPos)
                 listaPosicoesAnimais.remove(novaPos)
             else:
+                novaPos = obter_movimento(m, pos)
                 if obter_movimento(m, pos) != pos:
-                    mover_animal(m, pos, obter_movimento(m, pos))
+                    mover_animal(m, pos, novaPos)
             
             if eh_animal_faminto(a):
                 eliminar_animal(m, novaPos)
-        
-
-        
-
-
+    
     return m
         
+def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
+    '''
+        TODO
+    '''
+    with open(f, "r") as file:
+        dimTuple = tuple(map(int, file.readline().strip('(').strip(')\n').split(', ')))
+        dim = cria_posicao(dimTuple[0], dimTuple[1])
+        
+        evaledObs = eval(file.readline())
+        obs = ()
+        for o in evaledObs:
+            obs += (cria_posicao(o[0], o[1]), )
+
+
+        an = ()
+        anPosics = ()
+
+        for line in file:
+            print(line)
+            evaledLine = eval(line)
+            an += (cria_animal(evaledLine[0], evaledLine[1], evaledLine[2]), )
+            anPosics += (cria_posicao(evaledLine[3][0], evaledLine[3][1]), )
+
+        m = cria_prado(dim, obs, an, anPosics)
+        
+        print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. 0)')
+        prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
+        print(prado_para_str(m))
+
+        for i in range(1, g+1):
+            geracao(m)
+
+            if v and (prevPred != obter_numero_predadores(m) or prevPres != obter_numero_presas(m)):
+                print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {i})')
+                print(prado_para_str(m))
+
+            prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
 
 
 
 
-
-obs = (cria_posicao(4,2), cria_posicao(5,2))
-anpos = tuple(cria_posicao(p[0], p[1]) for p in ((7,1), (7,2), (10,1), (6,1)))
-an2 = tuple(cria_animal('rabbit', 5, 0) for i in range(3))
-an1 = (cria_animal('lynx', 20, 15), ) 
-an = an2+an1
-p = cria_prado(cria_posicao(11,4), obs, an, anpos)
-
-print(prado_para_str(p))
-
-print(prado_para_str(geracao(p)))
+simula_ecossistema("config.txt", 8, True)
