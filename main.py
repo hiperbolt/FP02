@@ -719,7 +719,7 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
         prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
         print(prado_para_str(m))
 
-        for i in range(1, g+1):
+        for i in range(1, g):
             geracao(m)
 
             if v and (prevPred != obter_numero_predadores(m) or prevPres != obter_numero_presas(m)):
@@ -728,7 +728,18 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
 
             prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
 
+        geracao(m)
+        print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {g+1})')
+        print(prado_para_str(m))
 
 
+        
+### Função extra para o PradoGUI
+def parse_config(f: str) -> prado:
+    
+    
+    
+    pass
 
-simula_ecossistema("config.txt", 8, True)
+
+simula_ecossistema("config.txt", 1, True)
