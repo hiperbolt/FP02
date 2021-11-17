@@ -729,17 +729,35 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
             prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
 
         geracao(m)
-        print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {g+1})')
+        print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {g})')
         print(prado_para_str(m))
 
 
         
 ### Função extra para o PradoGUI
 def parse_config(f: str) -> prado:
-    
-    
-    
-    pass
+    '''
+        TODO
+    '''
+    with open(f, "r") as file:
+        dimTuple = tuple(map(int, file.readline().strip('(').strip(')\n').split(', ')))
+        dim = cria_posicao(dimTuple[0], dimTuple[1])
+        
+        evaledObs = eval(file.readline())
+        obs = ()
+        for o in evaledObs:
+            obs += (cria_posicao(o[0], o[1]), )
 
 
-simula_ecossistema("config.txt", 1, True)
+        an = ()
+        anPosics = ()
+
+        for line in file:
+            print(line)
+            evaledLine = eval(line)
+            an += (cria_animal(evaledLine[0], evaledLine[1], evaledLine[2]), )
+            anPosics += (cria_posicao(evaledLine[3][0], evaledLine[3][1]), )
+
+        m = cria_prado(dim, obs, an, anPosics)
+        
+    return m
