@@ -219,7 +219,7 @@ def obter_freq_reprod(a: animal) -> int:
 def obter_freq_aliment(a: animal) -> int:
     '''
         obter_freq_aliment(a) devolve a freq_aliment do animal a.
-    '''
+    '''False
     return int(a.freq_alim)
 
 def obter_idade(a: animal) -> int:
@@ -743,9 +743,8 @@ def parse_config(f: str) -> prado:
         dimTuple = tuple(map(int, file.readline().strip('(').strip(')\n').split(', ')))
         dim = cria_posicao(dimTuple[0], dimTuple[1])
         
-        evaledObs = eval(file.readline())
         obs = ()
-        for o in evaledObs:
+        for o in eval(file.readline()):
             obs += (cria_posicao(o[0], o[1]), )
 
 
@@ -760,4 +759,4 @@ def parse_config(f: str) -> prado:
 
         m = cria_prado(dim, obs, an, anPosics)
         
-    return m
+    return m 
