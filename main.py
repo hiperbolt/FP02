@@ -16,8 +16,10 @@ from functools import reduce
 
 class posicao:
     def __init__(self, x, y) -> None:
-        self.x = x
-        self.y = y
+        if isinstance(x, int) and isinstance(y, int):
+            if x >= 0 and y >= 0:
+                self.x = x
+                self.y = y
 
     def __repr__(self) -> str:
         return str((self.x, self.y))
@@ -198,7 +200,7 @@ def cria_copia_animal(a: animal) -> animal:
         TODO : Descrição
         Garantimos que estamos a criar deep copy do objeto
     '''
-    return animal(a.tipo, a.especie, a.freq_reprod, a.freq_alim, a.idade, a.fome)
+    return animal(a.tipo, a.especie, a.freq_reprod, a.freq_alim, idade=a.idade, fome=a.fome)
     
 
 ###
@@ -220,6 +222,9 @@ def obter_freq_alimentacao(a: animal) -> int:
     '''
         obter_freq_alimentacao(a) devolve a freq_aliment do animal a.
     '''
+    if a.tipo == "presa":
+        return 0
+
     return int(a.freq_alim)
 
 def obter_idade(a: animal) -> int:
@@ -232,6 +237,9 @@ def obter_fome(a: animal) -> int:
     '''
         obter_fome(a) devolve a fome do animal a.
     '''
+    if a.tipo == "presa":
+        return 0
+
     return int(a.fome)
 
     
@@ -303,8 +311,9 @@ def animais_iguais(a1: animal, a2: animal) -> bool:
     '''
         TODO : DESCRIÇÃO
     ''' 
-    if a1 == a2:
-        return True
+    if eh_animal(a1) and eh_animal(a2):
+        if a1 == a2:
+            return True
 
     return False
 
@@ -351,6 +360,8 @@ def eh_animal_faminto(a: animal) -> bool:
     '''
         TODO
     '''
+    if eh_presa(a):
+        return False
     if obter_fome(a) >= obter_freq_alimentacao(a):
         return True
 
@@ -362,7 +373,6 @@ def reproduz_animal(a: animal) -> animal:
     '''
     reset_idade(a)
     return reset_fome(reset_idade(cria_copia_animal(a)))
-
 
 
 ###
@@ -400,13 +410,13 @@ class prado:
         self.input_animais = animais
         self.input_posAnimais = posAnimais
 
+
         # Representação interna
-        # A rep. int. ignora a moldura pelo que tem valores x,y ligeiramente diferentes
-        # Isto é tido em conta sempre que o TAD é acedido exteriormente.
         self.colunas = obter_pos_x(cantInfDirPos) - 1
         self.linhas = obter_pos_y(cantInfDirPos) - 1
         self.obs = list(obs)
-        self.animais = dict(zip(posAnimais, animais))
+        self.animais = posAnimais
+        #self.animais = dict(zip(list(map(lambda x: (obter_pos_x(x), obter_pos_y(x)), posAnimais)), animais))
 
     def generate_repr_interna(self):
         self.repr = []
@@ -443,16 +453,17 @@ def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
         a: tuplo de animais
         p: tuplo de posiçoes desses animais
     '''
-    if isinstance(d, posicao) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
-        if all(isinstance(i, animal) for i in a) and all(isinstance(i, posicao) for i in p):
+    if eh_posicao(d) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
+        try:
+            if all(eh_animal(i) for i in a) and all(eh_posicao(i) for i in p):
                 if len(p) == len(a):
-                    if len(r) == 0 or all(isinstance(i, posicao) for i in r):
-                        # TODO: Garantir que esta arg check esta funcional
+                    if len(r) == 0 or all(eh_posicao(i) for i in r):
+                        # TODO: Garantir que esta arg check esta funcional - não está
                         pRes = prado(d, r, a, p)
                         return pRes
-
-
-    return ValueError('cria_prado: argumentos invalidos')
+        except:
+            raise ValueError('cria_prado: argumentos invalidos')
+    raise ValueError('cria_prado: argumentos invalidos')
 
 def cria_copia_prado(m: prado) -> prado:
     '''
@@ -492,7 +503,9 @@ def obter_posicao_animais(m: prado) -> tuple:
     '''
         TODO
     '''
-    return tuple(sorted(list(m.animais.keys()), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
+    if m.animais:
+        return tuple(sorted(list(m.animais.keys()), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
+    return ()
 
 def obter_animal(m: prado, p: posicao) -> animal:
     '''
@@ -647,7 +660,7 @@ def obter_movimento(m: prado, p: posicao) -> posicao:
     N = obter_valor_numerico(m, p)
 
     if presasDict:
-        return presasDict[N%n]
+        return presasDict[N%j]
     if posDict:
         return posDict[N%n]
     return p
@@ -661,38 +674,45 @@ def geracao(m: prado) -> prado:
     '''
         TODO
     '''
-    listaPosicoesAnimais = list(obter_posicao_animais(m))
+    posicoesExcluidas = []
 
-    for pos in listaPosicoesAnimais:
-        a = obter_animal(m, pos)
-        ### Incrementar
-        aumenta_idade(a)
-        
-
-        ### Movimentação
-        novaPos = obter_movimento(m, pos)
-
-        if eh_presa(a):
-            if novaPos != pos:
-                mover_animal(m, pos, obter_movimento(m, pos))
-                if eh_animal_fertil(a):
-                    reset_idade(a)
-                    inserir_animal(m, reproduz_animal(a), pos)
-
-        if eh_predador(a):
-            aumenta_fome(a)
-            if eh_posicao_animal(m, novaPos):
-                reset_fome(a)
-                eliminar_animal(m, novaPos)
-                mover_animal(m, pos, novaPos)
-                listaPosicoesAnimais.remove(novaPos)
-            else:
-                if obter_movimento(m, pos) != pos:
-                    mover_animal(m, pos, novaPos)
+    for pos in list(obter_posicao_animais(m)):
+        if (not posicoesExcluidas) or (not any(posicoes_iguais(x, pos) for x in posicoesExcluidas)): # Se esta posição não estiver excluída
+            a = obter_animal(m, pos)
+            ### Incrementar
+            aumenta_idade(a)
             
-            if eh_animal_faminto(a):
-                eliminar_animal(m, novaPos)
-    
+            ### Movimentação
+            novaPos = obter_movimento(m, pos)
+            
+            if eh_presa(a):
+                if novaPos != pos:
+                    mover_animal(m, pos, obter_movimento(m, pos))
+                    if eh_animal_fertil(a):
+                        reset_idade(a)
+                        inserir_animal(m, reproduz_animal(a), pos)
+
+            if eh_predador(a):
+                aumenta_fome(a)
+                if eh_posicao_animal(m, novaPos):
+                    # COMER
+                    reset_fome(a)
+                    eliminar_animal(m, novaPos)
+                    mover_animal(m, pos, novaPos)
+                    posicoesExcluidas.append(novaPos)
+                    if eh_animal_fertil(a):
+                        reset_idade(a)
+                        inserir_animal(m, reproduz_animal(a), pos)
+                else:
+                    if obter_movimento(m, pos) != pos:
+                        mover_animal(m, pos, novaPos)
+                        if eh_animal_fertil(a):
+                            reset_idade(a)
+                            inserir_animal(m, reproduz_animal(a), pos)
+                
+                if eh_animal_faminto(a):
+                    eliminar_animal(m, novaPos)
+        
     return m
         
 def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
@@ -700,7 +720,7 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
         TODO
     '''
     with open(f, "r") as file:
-        dimTuple = tuple(map(int, file.readline().strip('(').strip(')\n').split(', ')))
+        dimTuple = eval(file.readline())
         dim = cria_posicao(dimTuple[0], dimTuple[1])
         
         evaledObs = eval(file.readline())
@@ -719,23 +739,27 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
 
         m = cria_prado(dim, obs, an, anPosics)
         
+        # Gen 0
         print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. 0)')
-        prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
         print(prado_para_str(m))
 
-        for i in range(1, g):
-            geracao(m)
+        prevPredador = obter_numero_predadores(m)
+        prevPresas = obter_numero_presas(m)
 
-            if v and (prevPred != obter_numero_predadores(m) or prevPres != obter_numero_presas(m)):
-                print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {i})')
-                print(prado_para_str(m))
-
-            prevPred, prevPres = obter_numero_predadores(m), obter_numero_presas(m)
-
-        geracao(m)
-        print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {g})')
-        print(prado_para_str(m))
-
+        for i in range(g):
+            m = geracao(m)
+            if v:
+                if prevPredador != obter_numero_predadores(m) or prevPresas != obter_numero_presas(m):
+                    print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {i+1})')
+                    print(prado_para_str(m))
+            prevPredador = obter_numero_predadores(m)
+            prevPresas = obter_numero_presas(m)
+        
+        if not v:
+            print(f'Predadores: {obter_numero_predadores(m)} vs Presas: {obter_numero_presas(m)} (Gen. {g})')
+            print(prado_para_str(m))
+        
+    return (obter_numero_predadores(m), obter_numero_presas(m))
 
         
 ### Função extra para o PradoGUI
@@ -763,15 +787,3 @@ def parse_config(f: str) -> prado:
         m = cria_prado(dim, obs, an, anPosics)
         
     return m 
-
-
-
-#dim = cria_posicao(11, 4)
-#obs = (cria_posicao(4, 2), cria_posicao(5, 2))
-#an1 = tuple(cria_animal('rabbit', 5, 0) for i in range(3))
-#an2 = (cria_animal('lynx', 20, 15), )
-#pos = tuple(
-#    cria_posicao(p[0], p[1])
-#    for p in ((5, 1), (7, 2), (10, 1), (6, 1)))
-#prado = cria_prado(dim, obs, an1 + an2, pos)
-#print()
