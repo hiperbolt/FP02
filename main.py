@@ -415,8 +415,8 @@ class prado:
         self.colunas = obter_pos_x(cantInfDirPos) - 1
         self.linhas = obter_pos_y(cantInfDirPos) - 1
         self.obs = list(obs)
-        self.animais = posAnimais
-        #self.animais = dict(zip(list(map(lambda x: (obter_pos_x(x), obter_pos_y(x)), posAnimais)), animais))
+        self.animais = dict(zip(list(map(lambda x: (obter_pos_x(x), obter_pos_y(x)), posAnimais)), animais))
+        pass
 
     def generate_repr_interna(self):
         self.repr = []
@@ -431,7 +431,7 @@ class prado:
                 self.repr[obter_pos_y(o)-1][obter_pos_x(o)-1] = "@"
 
         for key in self.animais:
-            self.repr[obter_pos_y(key)-1][obter_pos_x(key)-1] = animal_para_char(self.animais[key])
+            self.repr[key[1]-1][key[0]-1] = animal_para_char(self.animais[key])
 
     def __repr__(self) -> str:
         return str(self.repr)
@@ -504,14 +504,15 @@ def obter_posicao_animais(m: prado) -> tuple:
         TODO
     '''
     if m.animais:
-        return tuple(sorted(list(m.animais.keys()), key=lambda x: (obter_pos_y(x), obter_pos_x(x))))
+        return tuple(map(lambda x: cria_posicao(x[0], x[1]), sorted(list(m.animais.keys()), key=lambda x: (x[1], x[0]))))
+
     return ()
 
 def obter_animal(m: prado, p: posicao) -> animal:
     '''
         TODO
     '''
-    return m.animais[p]
+    return m.animais[(obter_pos_x(p), obter_pos_y(p))]
 
 
 ###
@@ -522,7 +523,7 @@ def eliminar_animal(m: prado, p: posicao) -> prado:
     '''
         TODO
     '''
-    del m.animais[p]
+    del m.animais[(obter_pos_x(p), obter_pos_y(p))]
     return m
 
 def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
@@ -530,15 +531,15 @@ def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
         TODO
     '''
     if p1 != p2:
-        m.animais[p2] = m.animais[p1]
-        del m.animais[p1]
+        m.animais[(obter_pos_x(p2), obter_pos_y(p2))] = m.animais[(obter_pos_x(p1), obter_pos_y(p1))]
+        del m.animais[(obter_pos_x(p1), obter_pos_y(p1))]
     return m
 
 def inserir_animal(m: prado, a: animal, p: posicao) -> prado:
     '''
         TODO
     '''
-    m.animais[p] = a
+    m.animais[(obter_pos_x(p), obter_pos_y(p))] = a
     return m
 
 
@@ -559,7 +560,7 @@ def eh_posicao_animal(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if p in m.animais:
+    if any(posicoes_iguais(cria_posicao(x[0], x[1]), p) for x in m.animais):
         return True
     
     return False
@@ -569,7 +570,7 @@ def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
         TODO
     '''
     if  (
-        p in m.obs or obter_pos_x(p) == 0 or obter_pos_y(p) == 0 or
+        any(posicoes_iguais(x, p) for x in m.obs) or obter_pos_x(p) == 0 or obter_pos_y(p) == 0 or
         obter_pos_x(p) >= obter_tamanho_x(m)-1 or obter_pos_y(p) >= obter_tamanho_y(m)-1
         ):
         return True
@@ -579,7 +580,7 @@ def eh_posicao_livre(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if p not in m.animais and p not in m.obs:
+    if (not (any(posicoes_iguais(cria_posicao(x[0], x[1]), p) for x in m.animais))) and (not (any(posicoes_iguais(x, p) for x in m.obs))):
         if obter_pos_x(p) != 0 and obter_pos_y != 0:
             if obter_pos_x(p) < obter_tamanho_x(m) - 1 and obter_pos_y(p) < obter_tamanho_y(m) - 1:
                 return True
