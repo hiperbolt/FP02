@@ -40,7 +40,7 @@ def cria_posicao(x: int, y: int) -> posicao:
         dos seus argumentos, gerando um ValueError.
     '''
     if isinstance(x, int) and isinstance(y, int):
-        if x > 0 and y > 0:
+        if x >= 0 and y >= 0:
             return posicao(x, y)
     
     raise ValueError("cria_posicao: argumentos invalidos")
@@ -210,16 +210,16 @@ def obter_especie(a: animal) -> str:
     '''
     return str(a.especie)
 
-def obter_freq_reprod(a: animal) -> int:
+def obter_freq_reproducao(a: animal) -> int:
     '''
-        obter_freq_reprod(a) devolve a freq_reprod do animal a.
+        obter_freq_reproducao(a) devolve a freq_reprod do animal a.
     '''
     return int(a.freq_reprod)
 
-def obter_freq_aliment(a: animal) -> int:
+def obter_freq_alimentacao(a: animal) -> int:
     '''
-        obter_freq_aliment(a) devolve a freq_aliment do animal a.
-    '''False
+        obter_freq_alimentacao(a) devolve a freq_aliment do animal a.
+    '''
     return int(a.freq_alim)
 
 def obter_idade(a: animal) -> int:
@@ -256,6 +256,8 @@ def aumenta_fome(a: animal) -> animal:
     '''
         TODO
     '''
+    if eh_presa(a):
+        return a
     a.fome += 1
     return a
 
@@ -326,7 +328,10 @@ def animal_para_str(a: animal) -> str:
     '''
         TODO : DESCRIÇÃO
     '''
-    return f"{a.especie} [{a.idade}/{a.freq_reprod};{a.fome}/{a.freq_alim}]"
+    if eh_predador(a):
+        return f"{a.especie} [{a.idade}/{a.freq_reprod};{a.fome}/{a.freq_alim}]"
+
+    return f"{a.especie} [{a.idade}/{a.freq_reprod}]"
 
 
 ###
@@ -337,7 +342,7 @@ def eh_animal_fertil(a: animal) -> bool:
     '''
         TODO : Descrição
     '''
-    if obter_idade(a) >= obter_freq_reprod(a):
+    if obter_idade(a) >= obter_freq_reproducao(a):
         return True
 
     return False
@@ -346,7 +351,7 @@ def eh_animal_faminto(a: animal) -> bool:
     '''
         TODO
     '''
-    if obter_fome(a) >= obter_freq_aliment(a):
+    if obter_fome(a) >= obter_freq_alimentacao(a):
         return True
 
     return False
@@ -550,9 +555,11 @@ def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
     '''
         TODO
     '''
-    if p in m.obs or obter_pos_x(p) == 0 or obter_pos_y == 0:
+    if  (
+        p in m.obs or obter_pos_x(p) == 0 or obter_pos_y(p) == 0 or
+        obter_pos_x(p) >= obter_tamanho_x(m)-1 or obter_pos_y(p) >= obter_tamanho_y(m)-1
+        ):
         return True
-
     return False
 
 def eh_posicao_livre(m: prado, p: posicao) -> bool:
@@ -624,17 +631,26 @@ def obter_movimento(m: prado, p: posicao) -> posicao:
         TODO
     '''
     n = 0
+    j = 0
     posDict = {}
+    presasDict = {}
     for pos in obter_posicoes_adjacentes(p):
         if eh_posicao_livre(m, pos):
             posDict[n] = pos
             n += 1
+        if eh_posicao_animal(m, pos):
+            if eh_predador(obter_animal(m, p)):
+                if eh_presa(obter_animal(m, pos)):
+                    presasDict[j] = pos
+                    j += 1
 
     N = obter_valor_numerico(m, p)
 
-    if n == 0:
-        return p
-    return posDict[N%n]
+    if presasDict:
+        return presasDict[N%n]
+    if posDict:
+        return posDict[N%n]
+    return p
 
 
 ###
@@ -654,34 +670,23 @@ def geracao(m: prado) -> prado:
         
 
         ### Movimentação
+        novaPos = obter_movimento(m, pos)
+
         if eh_presa(a):
-            if obter_movimento(m, pos) != pos:
+            if novaPos != pos:
                 mover_animal(m, pos, obter_movimento(m, pos))
                 if eh_animal_fertil(a):
                     reset_idade(a)
                     inserir_animal(m, reproduz_animal(a), pos)
 
-
-        elif eh_predador(a):
+        if eh_predador(a):
             aumenta_fome(a)
-            n = 0
-            presasDict = {}
-            for possivelPresa in obter_posicoes_adjacentes(pos):
-                if eh_posicao_animal(m, possivelPresa):
-                    if eh_presa(obter_animal(m, possivelPresa)):
-                        presasDict[n] = possivelPresa
-                        n += 1
-
-            N = obter_valor_numerico(m, pos)
-
-            if n != 0:  #Se existem "posições presa"
-                novaPos = presasDict[N%n]
+            if eh_posicao_animal(m, novaPos):
                 reset_fome(a)
                 eliminar_animal(m, novaPos)
                 mover_animal(m, pos, novaPos)
                 listaPosicoesAnimais.remove(novaPos)
             else:
-                novaPos = obter_movimento(m, pos)
                 if obter_movimento(m, pos) != pos:
                     mover_animal(m, pos, novaPos)
             
@@ -708,7 +713,6 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
         anPosics = ()
 
         for line in file:
-            print(line)
             evaledLine = eval(line)
             an += (cria_animal(evaledLine[0], evaledLine[1], evaledLine[2]), )
             anPosics += (cria_posicao(evaledLine[3][0], evaledLine[3][1]), )
@@ -752,7 +756,6 @@ def parse_config(f: str) -> prado:
         anPosics = ()
 
         for line in file:
-            print(line)
             evaledLine = eval(line)
             an += (cria_animal(evaledLine[0], evaledLine[1], evaledLine[2]), )
             anPosics += (cria_posicao(evaledLine[3][0], evaledLine[3][1]), )
@@ -760,3 +763,15 @@ def parse_config(f: str) -> prado:
         m = cria_prado(dim, obs, an, anPosics)
         
     return m 
+
+
+
+#dim = cria_posicao(11, 4)
+#obs = (cria_posicao(4, 2), cria_posicao(5, 2))
+#an1 = tuple(cria_animal('rabbit', 5, 0) for i in range(3))
+#an2 = (cria_animal('lynx', 20, 15), )
+#pos = tuple(
+#    cria_posicao(p[0], p[1])
+#    for p in ((5, 1), (7, 2), (10, 1), (6, 1)))
+#prado = cria_prado(dim, obs, an1 + an2, pos)
+#print()
