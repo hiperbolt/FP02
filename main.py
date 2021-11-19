@@ -248,7 +248,8 @@ def obter_fome(a: animal) -> int:
 ###
 def aumenta_idade(a: animal) -> animal:
     '''
-        TODO
+        aumenta idade(a) modifica destrutivamente o animal a incrementando o valor
+        da sua idade em uma unidade, e devolve o próprio animal.
     '''
     a.idade += 1
     return a
@@ -453,18 +454,26 @@ def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
         a: tuplo de animais
         p: tuplo de posiçoes desses animais
     '''
-    if eh_posicao(d) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
-        try:
-            if all(eh_animal(i) for i in a) and all(eh_posicao(i) for i in p):
-                if len(p) == len(a):
-                    if len(r) == 0 or all(eh_posicao(i) for i in r):
-                        if (all((1, 1) < (obter_pos_x(i), obter_pos_y(i)) <  (obter_pos_x(d), obter_pos_y(d)) for i in r)) and (all((1, 1) < (obter_pos_x(i), obter_pos_y(i)) <  (obter_pos_x(d), obter_pos_y(d)) for i in p)):
-                            # TODO: Garantir que esta arg check esta funcional - não está
-                            pRes = prado(d, r, a, p)
-                            return pRes
-        except:
-            raise ValueError('cria_prado: argumentos invalidos')
+    try:
+        if eh_posicao(d) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
+            if len(a) > 0 and len(p) > 0:
+                if all(eh_animal(i) for i in a) and all(eh_posicao(i) for i in p):
+                    if len(p) == len(a):
+                        if len(r) == 0 or all(eh_posicao(i) for i in r):
+                            if (
+                                all(obter_pos_x(x) in range(1, obter_pos_x(d)) for x in r) and
+                                all(obter_pos_y(x) in range(1, obter_pos_y(d)) for x in r) and
+                                all(obter_pos_x(x) in range(1, obter_pos_x(d)) for x in p) and
+                                all(obter_pos_y(x) in range(1, obter_pos_y(d)) for x in p)
+                            ):
+                                pRes = prado(d, r, a, p)
+                                return pRes
+    except:
+        raise ValueError('cria_prado: argumentos invalidos')
+
     raise ValueError('cria_prado: argumentos invalidos')
+
+
 
 def cria_copia_prado(m: prado) -> prado:
     '''
@@ -697,7 +706,7 @@ def geracao(m: prado) -> prado:
             if eh_predador(a):
                 aumenta_fome(a)
                 if eh_posicao_animal(m, novaPos):
-                    # COMER
+                    ### COMER
                     reset_fome(a)
                     eliminar_animal(m, novaPos)
                     mover_animal(m, pos, novaPos)
@@ -788,4 +797,4 @@ def parse_config(f: str) -> prado:
 
         m = cria_prado(dim, obs, an, anPosics)
         
-    return m 
+    return m
