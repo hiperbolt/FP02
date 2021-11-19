@@ -458,9 +458,10 @@ def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
             if all(eh_animal(i) for i in a) and all(eh_posicao(i) for i in p):
                 if len(p) == len(a):
                     if len(r) == 0 or all(eh_posicao(i) for i in r):
-                        # TODO: Garantir que esta arg check esta funcional - não está
-                        pRes = prado(d, r, a, p)
-                        return pRes
+                        if (all((1, 1) < (obter_pos_x(i), obter_pos_y(i)) <  (obter_pos_x(d), obter_pos_y(d)) for i in r)) and (all((1, 1) < (obter_pos_x(i), obter_pos_y(i)) <  (obter_pos_x(d), obter_pos_y(d)) for i in p)):
+                            # TODO: Garantir que esta arg check esta funcional - não está
+                            pRes = prado(d, r, a, p)
+                            return pRes
         except:
             raise ValueError('cria_prado: argumentos invalidos')
     raise ValueError('cria_prado: argumentos invalidos')
