@@ -206,6 +206,7 @@ def cria_copia_animal(a: animal) -> animal:
 ###
 #   Seletores
 ###
+
 def obter_especie(a: animal) -> str:
     '''
         TODO : descrição
@@ -246,6 +247,7 @@ def obter_fome(a: animal) -> int:
 ###
 #   Modificadores
 ###
+
 def aumenta_idade(a: animal) -> animal:
     '''
         aumenta idade(a) modifica destrutivamente o animal a incrementando o valor
@@ -256,14 +258,17 @@ def aumenta_idade(a: animal) -> animal:
 
 def reset_idade(a: animal) -> animal:
     '''
-        TODO
+        reset_idade(a) modifica destrutivamente o animal a definindo o valor da sua 
+        idade igual a 0, e devolve o próprio animal
     '''
     a.idade = 0
     return a
 
 def aumenta_fome(a: animal) -> animal:
     '''
-        TODO
+        aumenta fome(a) modifica destrutivamente o animal predador a incremen-
+        tando o valor da sua fome em uma unidade, e devolve o pr oprio animal. Esta
+        operacao nao modifica os animais presa.
     '''
     if eh_presa(a):
         return a
@@ -272,7 +277,9 @@ def aumenta_fome(a: animal) -> animal:
 
 def reset_fome(a: animal) -> animal:
     '''
-        TODO
+        reset_fome(a) modifiuca destrutivamente o animal predador a definindo
+        o valor da sua fome igual a 0, e devolve o proprio animal. Esta 
+        operação não modifica os animais presa.
     '''
     a.fome = 0
     return a
@@ -281,9 +288,11 @@ def reset_fome(a: animal) -> animal:
 ###
 #   Reconhecedor
 ###
+
 def eh_animal(arg) -> bool:
     '''
-        TODO : FIX ME!!!!
+        eh_animal(arg) devolve True caso o seu argumento seja um TAD animal e
+        Falso caso contrário.
     '''
     if isinstance(arg, animal):
         return True
@@ -291,6 +300,10 @@ def eh_animal(arg) -> bool:
     return False
 
 def eh_predador(arg) -> bool:
+    '''
+        eh_predador(arg) devolve True caso o seu argumento seja um TAD animal
+        do tipo predadr e False caso contrário
+    '''
     if eh_animal(arg):
         if arg.tipo == "predador":
             return True
@@ -298,6 +311,10 @@ def eh_predador(arg) -> bool:
     return False
 
 def eh_presa(arg) -> bool:
+    '''
+        eh_presa(arg) devolve True caso o seu argumento seja um TAD animal do
+        tipo presa e False caso contrário
+    '''
     if eh_animal(arg):
         if arg.tipo == "presa":
             return True
@@ -308,9 +325,11 @@ def eh_presa(arg) -> bool:
 ###
 #   Teste
 ###
+
 def animais_iguais(a1: animal, a2: animal) -> bool:
     '''
-        TODO : DESCRIÇÃO
+        animais_iguais(a1, a2) devolve True apenas de a1 e a2 são animais e
+        são iguais
     ''' 
     if eh_animal(a1) and eh_animal(a2):
         if a1 == a2:
@@ -325,7 +344,10 @@ def animais_iguais(a1: animal, a2: animal) -> bool:
 
 def animal_para_char(a: animal) -> str:
     '''
-        TODO : descrição
+        animal para char(a) devolve a cadeia de caracteres dum único elemento 
+        correspondente ao primeiro carácter da espécie do animal passada por 
+        argumento, em maiúscula para animais predadores e em minúscula para 
+        animais presa.
     '''
     res = str(a.especie)[0]
 
@@ -336,7 +358,8 @@ def animal_para_char(a: animal) -> str:
     
 def animal_para_str(a: animal) -> str:
     '''
-        TODO : DESCRIÇÃO
+        animal_para_str(a) devolve a cadeia de caracteres que representa o 
+        animal.
     '''
     if eh_predador(a):
         return f"{a.especie} [{a.idade}/{a.freq_reprod};{a.fome}/{a.freq_alim}]"
@@ -350,7 +373,8 @@ def animal_para_str(a: animal) -> str:
 
 def eh_animal_fertil(a: animal) -> bool:
     '''
-        TODO : Descrição
+        eh_animal_fertil(a) devolve True caso o animal a tenha atingido a
+        idade de reprodução e False caso contrário
     '''
     if obter_idade(a) >= obter_freq_reproducao(a):
         return True
@@ -359,7 +383,10 @@ def eh_animal_fertil(a: animal) -> bool:
 
 def eh_animal_faminto(a: animal) -> bool:
     '''
-        TODO
+        eh animal faminto(a) devolve True caso o animal a tenha atingindo um valor de
+        fome igual ou superior à sua frequência de alimentação e False caso contrário. As
+        presas devolvem sempre False.
+
     '''
     if eh_presa(a):
         return False
@@ -370,7 +397,10 @@ def eh_animal_faminto(a: animal) -> bool:
 
 def reproduz_animal(a: animal) -> animal:
     '''
-        TODO
+        reproduz animal(a) recebe um animal a devolvendo um novo animal da mesma
+        espécie com idade e fome igual a 0, e modificando destrutivamente o animal passado
+        como argumento a alterando a sua idade para 0.
+
     '''
     reset_idade(a)
     return reset_fome(reset_idade(cria_copia_animal(a)))
@@ -379,9 +409,9 @@ def reproduz_animal(a: animal) -> animal:
 ###
 #   TAD prado
 #
-#   TODO
+#   O TAD prado representa o mapa do ecossistema e os animais que se encontram
+#   lá dentro.
 #   
-#
 #   
 ###
 
@@ -420,6 +450,9 @@ class prado:
         pass
 
     def generate_repr_interna(self):
+        '''
+            Gera a representação em forma de matrix do prado
+        '''
         self.repr = []
 
         for i in range(self.linhas):
@@ -449,10 +482,14 @@ class prado:
 
 def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
     '''
-        d: lower right corner pos
-        r: tuplo de posiçoes dos rochedos
-        a: tuplo de animais
-        p: tuplo de posiçoes desses animais
+        cria_prado(d, r, a, p) recebe uma posição d que 
+        ocupa a montanha do canto inferior direito do prado,
+        um tuplo r de 0 ou mais pos correspondentes aos rochedos,
+        um tuplo a de 1 ou mais animais, e um tuplo p da mesma dimensão do a
+        com as pos correspondentes dos animais; devolve o prado que representa
+        internamente o mapa e animais presentes. Verifica a validade dos seus
+        argumentos gerando um ValueError caso os argumentos não sejam
+        válidos.
     '''
     try:
         if eh_posicao(d) and isinstance(r, tuple) and isinstance(a, tuple) and isinstance(p, tuple):
@@ -473,11 +510,9 @@ def cria_prado(d: posicao, r: tuple, a:tuple, p:tuple) -> prado:
 
     raise ValueError('cria_prado: argumentos invalidos')
 
-
-
 def cria_copia_prado(m: prado) -> prado:
     '''
-        TODO
+        cria_copia_prado(m) recebe um prado e devolve uma nova cópia do mesmo.
     '''
     return cria_prado(m.input_cantInfDirPos, m.input_obs, m.input_animais, m.input_posAnimais)
 
@@ -485,33 +520,37 @@ def cria_copia_prado(m: prado) -> prado:
 ###
 #   Seletores
 ###
+
 def obter_tamanho_x(m: prado) -> int:
     '''
-        TODO
+        obter_tamanho_x(m) devolve o valor inteiro que corresponde à dimensão x
+        do prado.
     '''
     return obter_pos_x(m.input_cantInfDirPos) + 1
 
 def obter_tamanho_y(m: prado) -> int:
     '''
-        TODO
+        obter_tamanho_y(m) devolve o valor inteiro que corresponde à dimensão y
+        do prado.
     '''
     return obter_pos_y(m.input_cantInfDirPos) + 1
 
 def obter_numero_predadores(m: prado) -> int:
     '''
-        TODO
+        obter_numero_predador(m) devolve o número de animais predadores no prado.
     '''
     return int(reduce(lambda x,y: x+1 if (eh_predador(y)) else x, list(m.animais.values()), 0))
 
 def obter_numero_presas(m: prado) -> int:
     '''
-        TODO
+        obter_numero_presas(m) devolve o número de animais presa no prado.
     '''
     return int(reduce(lambda x,y: x+1 if (eh_presa(y)) else x, list(m.animais.values()), 0))
 
 def obter_posicao_animais(m: prado) -> tuple:
     '''
-        TODO
+        obter_posicoes_animais(m) devolve um tuplo contendo as posições do prado ocupadas
+        por animais, ordenadas de acordo com a ordem de leitura.
     '''
     if m.animais:
         return tuple(map(lambda x: cria_posicao(x[0], x[1]), sorted(list(m.animais.keys()), key=lambda x: (x[1], x[0]))))
@@ -520,7 +559,7 @@ def obter_posicao_animais(m: prado) -> tuple:
 
 def obter_animal(m: prado, p: posicao) -> animal:
     '''
-        TODO
+        obter_animal(m, p) devolve o animal que se encontra na pos p.
     '''
     return m.animais[(obter_pos_x(p), obter_pos_y(p))]
 
@@ -531,14 +570,17 @@ def obter_animal(m: prado, p: posicao) -> animal:
 
 def eliminar_animal(m: prado, p: posicao) -> prado:
     '''
-        TODO
+        eliminar_animal(m, p) modifica destrutivamente o prado m eliminado
+        o animal da posição p deixando-a livre. Devolve o próprio prado.
     '''
     del m.animais[(obter_pos_x(p), obter_pos_y(p))]
     return m
 
 def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
     '''
-        TODO
+        mover_animal(m, p1, p2) modifica destrutivamente o prado m movimentando
+        o animal da posição p1 para a nova posição p2, deixando livre a posição onde
+        se encontrava. Devolve o próprio prado.
     '''
     if p1 != p2:
         m.animais[(obter_pos_x(p2), obter_pos_y(p2))] = m.animais[(obter_pos_x(p1), obter_pos_y(p1))]
@@ -547,7 +589,9 @@ def mover_animal(m: prado, p1: posicao, p2: posicao) -> prado:
 
 def inserir_animal(m: prado, a: animal, p: posicao) -> prado:
     '''
-        TODO
+        inserir_animal(m, a, p) modifica destrutivamente o prado m acrescentando na
+        posição p do prado o animal a passado com argumento. Devolve o próprio
+        prado.
     '''
     m.animais[(obter_pos_x(p), obter_pos_y(p))] = a
     return m
@@ -559,7 +603,8 @@ def inserir_animal(m: prado, a: animal, p: posicao) -> prado:
 
 def eh_prado(arg) -> bool:
     '''
-        TODO
+        eh_prado(arg) devolve True caso o seu argumento seja um TAD prado e
+        False caso contrário.
     '''
     if isinstance(arg, prado):
         return True
@@ -568,7 +613,8 @@ def eh_prado(arg) -> bool:
 
 def eh_posicao_animal(m: prado, p: posicao) -> bool:
     '''
-        TODO
+        eh_posição_animal(m, p) devolve True apenas no caso da posição p do prado
+        estar ocupada por um animal.
     '''
     if any(posicoes_iguais(cria_posicao(x[0], x[1]), p) for x in m.animais):
         return True
@@ -577,7 +623,8 @@ def eh_posicao_animal(m: prado, p: posicao) -> bool:
 
 def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
     '''
-        TODO
+        eh_posicao_obstaculo(m, p) devolve True apenas no caso da posição p do prado
+        estar ocupada por montanha ou rochedo.
     '''
     if  (
         any(posicoes_iguais(x, p) for x in m.obs) or obter_pos_x(p) == 0 or obter_pos_y(p) == 0 or
@@ -588,7 +635,8 @@ def eh_posicao_obstaculo(m: prado, p: posicao) -> bool:
 
 def eh_posicao_livre(m: prado, p: posicao) -> bool:
     '''
-        TODO
+        eh_posicao_livre(m, p) devolve True apenas no caso da posição p do prado corresponder
+        a um espaço livre (sem animais, nem obstáculos.)
     '''
     if (not (any(posicoes_iguais(cria_posicao(x[0], x[1]), p) for x in m.animais))) and (not (any(posicoes_iguais(x, p) for x in m.obs))):
         if obter_pos_x(p) != 0 and obter_pos_y != 0:
@@ -604,7 +652,8 @@ def eh_posicao_livre(m: prado, p: posicao) -> bool:
 
 def prados_iguais(p1: prado, p2: prado) -> bool:
     '''
-        TODO
+        prados_iguais(p1, p2) devolve True apenas de p1 e p2 forem prados e 
+        forem iguais.
     '''
     return p1 == p2
 
@@ -615,7 +664,8 @@ def prados_iguais(p1: prado, p2: prado) -> bool:
 
 def prado_para_str(m: prado) -> str:
     '''
-        TODO
+        prado_para_str(m) devolve uma cadeira de caracteres que representa
+        o prado.
     '''
     m.generate_repr_interna()
 
@@ -646,13 +696,17 @@ def prado_para_str(m: prado) -> str:
 
 def obter_valor_numerico(m: prado, p: posicao) -> int:
     '''
-        TODO
+        obter_valor_numerico(m, p) devolve a posição seguinte do animal na
+        posição p dentro do prado m de acordo com as regras de movimento dos
+        animais no prado.
     '''
     return (obter_tamanho_x(m)) * obter_pos_y(p) + obter_pos_x(p)
 
 def obter_movimento(m: prado, p: posicao) -> posicao:
     '''
-        TODO
+        obter_movimento(m, p) devolve a posição seguinte do animal na posição p
+        dentro do prado m de acordo com as regras de movimento dos animais 
+        no prado.
     '''
     n = 0
     j = 0
@@ -683,7 +737,9 @@ def obter_movimento(m: prado, p: posicao) -> posicao:
 
 def geracao(m: prado) -> prado:
     '''
-        TODO
+        geracao(m) é a função auxiliar que modifica o prado m de acordo
+        com a evolução correspondente a uma geração inteira, e devolve
+        o próprio prado.
     '''
     posicoesExcluidas = []
 
@@ -728,7 +784,10 @@ def geracao(m: prado) -> prado:
         
 def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
     '''
-        TODO
+        simula_ecossistema(f, g, v) é a função principal que permite simular o ecossistema de
+        um prado. A função recebe uma cadeira de caracteres f, um valor inteiro g e um
+        booleano v e devolve o tuplo de dois elementos correspondente ao número de predadores
+        e presas no fim da simulação. O argumento v ativa o modo verboso.
     '''
     with open(f, "r") as file:
         dimTuple = eval(file.readline())
@@ -772,11 +831,13 @@ def simula_ecossistema(f: str, g :int, v: bool) -> tuple:
         
     return (obter_numero_predadores(m), obter_numero_presas(m))
 
-        
+
 ### Função extra para o PradoGUI
+
 def parse_config(f: str) -> prado:
     '''
-        TODO
+        Função extra requirida para garantir funcionalidade com
+        o PradoGUI.
     '''
     with open(f, "r") as file:
         dimTuple = tuple(map(int, file.readline().strip('(').strip(')\n').split(', ')))
